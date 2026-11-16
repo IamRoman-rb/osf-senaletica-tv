@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <rect width="1920" height="1080" fill="#123C69"/>
+  <text x="960" y="500" fill="#FFFFFF" font-family="Segoe UI, sans-serif" font-size="96" font-weight="700" text-anchor="middle">Pieza de prueba 3</text>
+  <text x="960" y="600" fill="#C9D6EA" font-family="Segoe UI, sans-serif" font-size="40" text-anchor="middle">Modo demo — reemplazada por el contenido del panel web</text>
+</svg>

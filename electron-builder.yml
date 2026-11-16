@@ -1,0 +1,42 @@
+# Configuración del instalador para Windows (.exe NSIS)
+appId: com.osfbroker.senaletica
+productName: OSF Senaletica
+copyright: Copyright © Organización San Francisco - Broker de Seguros
+
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - src/**/*
+  - assets/**/*
+  - package.json
+  - "!**/*.test.js"
+
+asar: true
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  artifactName: OSF-Senaletica-Setup-${version}.${ext}
+  # icon: build/icon.ico   # agregar el ícono oficial (256x256) cuando esté disponible
+
+nsis:
+  oneClick: false
+  perMachine: false            # instalación por usuario: no pide permisos de administrador y permite actualizar en silencio
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: OSF Señalética
+  uninstallDisplayName: OSF Señalética
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false
+
+# Feed de actualizaciones automáticas.
+# Se publican en GitHub Releases del repositorio (ver .github/workflows/release.yml).
+publish:
+  provider: github
+  owner: IamRoman-rb
+  repo: osf-senaletica-tv
+  releaseType: release

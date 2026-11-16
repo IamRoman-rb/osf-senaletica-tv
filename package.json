@@ -1,0 +1,32 @@
+{
+  "name": "osf-senaletica",
+  "productName": "OSF Senaletica",
+  "version": "1.0.0",
+  "description": "Señalética digital para las TVs de las sucursales de Organización San Francisco - Broker de Seguros",
+  "main": "src/main/main.js",
+  "author": "Organización San Francisco",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "cross-env OSF_API_MODE=mock electron .",
+    "lint": "eslint .",
+    "test": "node --test tests/",
+    "dist": "electron-builder --win --publish never",
+    "release": "electron-builder --win --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "cross-env": "^10.1.0",
+    "electron": "^45.3.3",
+    "electron-builder": "^26.18.0",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0"
+  }
+}

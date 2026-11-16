@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' osf-media:; media-src osf-media:">
+  <title>OSF Señalética</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <!-- ============ LAUNCHER / LOGIN ============ -->
+  <div id="view-login" class="login" hidden>
+    <aside class="login__brand">
+      <div class="brand">
+        <div class="brand__logo" aria-hidden="true">OSF</div>
+        <div class="brand__text">
+          <strong>Organización San Francisco</strong>
+          <span>Señalética de sucursales</span>
+        </div>
+      </div>
+      <div class="login__pitch">
+        <h1>Tus pantallas, siempre al día.</h1>
+        <p>Iniciá sesión para sincronizar el contenido de tu sucursal y abrir el reproductor en la TV.</p>
+      </div>
+      <div class="update-box" id="login-update" aria-live="polite">
+        <div class="update-box__row"><span data-update-title>Buscando actualizaciones…</span><span data-update-percent></span></div>
+        <div class="progress" data-update-bar-wrap hidden><div class="progress__bar" data-update-bar></div></div>
+        <span class="update-box__meta" data-update-meta></span>
+        <button type="button" class="btn btn--light" data-update-install hidden>Reiniciar y actualizar</button>
+      </div>
+    </aside>
+    <main class="login__form-wrap">
+      <form id="login-form" class="login__form" novalidate>
+        <div>
+          <h2>Iniciar sesión</h2>
+          <p class="muted">Usá las credenciales de tu sucursal</p>
+        </div>
+        <label class="field">Usuario
+          <input id="login-user" name="username" type="text" autocomplete="username" required>
+        </label>
+        <label class="field">Contraseña
+          <input id="login-pass" name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <label class="check"><input id="login-remember" type="checkbox" checked> Recordar este equipo</label>
+        <p id="login-error" class="form-error" role="alert" hidden></p>
+        <button id="login-submit" type="submit" class="btn btn--primary btn--block">Ingresar</button>
+        <div class="login__footer muted"><span id="login-api-mode"></span><span id="login-version"></span></div>
+      </form>
+    </main>
+  </div>
+
+  <!-- ============ PANEL ============ -->
+  <div id="view-app" class="app" hidden>
+    <nav class="sidebar" aria-label="Secciones">
+      <div class="brand brand--small">
+        <div class="brand__logo" aria-hidden="true">OSF</div>
+        <strong>Señalética</strong>
+      </div>
+      <button type="button" class="nav-link is-active" data-nav="dashboard">Panel de control</button>
+      <button type="button" class="nav-link" data-nav="screens">Pantallas</button>
+      <button type="button" class="nav-link" data-nav="updates">Actualizaciones</button>
+      <button type="button" class="nav-link" data-nav="settings">Ajustes</button>
+      <div class="sidebar__user">
+        <strong id="user-branch"></strong>
+        <span id="user-name"></span>
+        <button type="button" class="link-btn" id="logout-btn">Cerrar sesión</button>
+      </div>
+    </nav>
+
+    <main class="content">
+      <!-- Panel de control -->
+      <section data-view="dashboard" class="view">
+        <header class="page-head">
+          <div>
+            <h1>Panel de control</h1>
+            <p class="muted">Contenido cargado por el diseñador en el panel web de OSF</p>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn--ghost" id="sync-btn">Sincronizar ahora</button>
+            <button type="button" class="btn btn--primary" id="player-toggle">Abrir en la TV</button>
+          </div>
+        </header>
+
+        <div class="stats">
+          <div class="card stat"><span class="muted">Conexión con el servidor</span><strong id="stat-connection">—</strong></div>
+          <div class="card stat"><span class="muted">Última sincronización</span><strong id="stat-last-sync">—</strong></div>
+          <div class="card stat"><span class="muted">Piezas en la secuencia</span><strong id="stat-count">0</strong></div>
+          <div class="card stat"><span class="muted">Pantalla de salida</span><strong id="stat-display">—</strong></div>
+        </div>
+        <p id="sync-message" class="notice" hidden></p>
+
+        <div class="columns">
+          <div class="card col-main">
+            <div class="card__head"><h2>Secuencia actual</h2><span class="muted">Se edita desde el panel web</span></div>
+            <ol id="sequence" class="sequence"></ol>
+            <p id="sequence-empty" class="muted empty">Todavía no hay piezas. Cuando el diseñador cargue imágenes o videos aparecerán acá.</p>
+          </div>
+          <div class="col-side">
+            <div class="card">
+              <h2>En la TV ahora</h2>
+              <div class="preview" id="preview"><span class="muted" id="preview-empty">La TV está apagada</span></div>
+              <div class="actions actions--fill">
+                <button type="button" class="btn btn--ghost" id="cmd-prev" aria-label="Pieza anterior">Anterior</button>
+                <button type="button" class="btn btn--ghost" id="cmd-pause">Pausar</button>
+                <button type="button" class="btn btn--ghost" id="cmd-next" aria-label="Pieza siguiente">Siguiente</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pantallas -->
+      <section data-view="screens" class="view" hidden>
+        <header class="page-head"><div><h1>Pantallas</h1><p class="muted">Elegí en qué monitor se muestra la publicidad</p></div></header>
+        <div class="card form-card">
+          <label class="field">Contenido de la sucursal
+            <select id="branch-select">
+              <option value="__user__">Según el usuario que inició sesión</option>
+              <option value="">Todas las sucursales</option>
+              <option value="Las Toninas">Las Toninas</option>
+              <option value="San Francisco Solano">San Francisco Solano</option>
+              <option value="__other__">Otra…</option>
+            </select>
+          </label>
+          <label class="field" id="branch-other-wrap" hidden>Nombre de la sucursal (tal como figura en el panel web)
+            <input id="branch-other" type="text" maxlength="100">
+          </label>
+          <label class="field">Monitor de la TV
+            <select id="display-select"></select>
+          </label>
+          <label class="field">Ajuste de la imagen
+            <select id="fit-select">
+              <option value="contain">Mostrar la pieza completa (bordes negros si no coincide el formato)</option>
+              <option value="cover">Llenar toda la pantalla (puede recortar bordes)</option>
+            </select>
+          </label>
+          <p class="muted">La ventana de la TV se ajusta sola a la resolución del monitor y se reacomoda si se conecta o desconecta.</p>
+        </div>
+      </section>
+
+      <!-- Actualizaciones -->
+      <section data-view="updates" class="view" hidden>
+        <header class="page-head"><div><h1>Actualizaciones</h1><p class="muted">El programa se actualiza solo; acá podés ver el estado</p></div></header>
+        <div class="card form-card" id="updates-card" aria-live="polite">
+          <div class="update-row"><span class="muted">Versión instalada</span><strong id="upd-current">—</strong></div>
+          <div class="update-row"><span class="muted">Estado</span><strong data-update-title>—</strong></div>
+          <div class="progress progress--dark" data-update-bar-wrap hidden><div class="progress__bar" data-update-bar></div></div>
+          <span class="muted" data-update-meta></span>
+          <div class="actions">
+            <button type="button" class="btn btn--ghost" id="update-check">Buscar actualizaciones</button>
+            <button type="button" class="btn btn--primary" data-update-install hidden>Reiniciar y actualizar</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ajustes -->
+      <section data-view="settings" class="view" hidden>
+        <header class="page-head"><div><h1>Ajustes</h1></div></header>
+        <div class="card form-card">
+          <label class="check"><input type="checkbox" id="set-autostart"> Iniciar con Windows</label>
+          <label class="check"><input type="checkbox" id="set-autoplayer"> Abrir la TV automáticamente al iniciar sesión</label>
+          <label class="check"><input type="checkbox" id="set-mute"> Reproducir videos sin sonido</label>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

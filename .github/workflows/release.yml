@@ -1,0 +1,33 @@
+name: Release (instalador Windows)
+
+# Se dispara al subir un tag de versión, p. ej.:  git tag v1.0.1 && git push origin v1.0.1
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - name: Verificar que el tag coincide con package.json
+        shell: bash
+        run: |
+          PKG="v$(node -p "require('./package.json').version")"
+          if [ "$PKG" != "${GITHUB_REF_NAME}" ]; then
+            echo "El tag ${GITHUB_REF_NAME} no coincide con la versión de package.json ($PKG)"; exit 1
+          fi
+      - name: Construir y publicar instalador (.exe + latest.yml para auto-actualización)
+        run: npx electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
