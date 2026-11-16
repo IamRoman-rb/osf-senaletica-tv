@@ -12,8 +12,8 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -27,6 +27,15 @@ jobs:
           if [ "$PKG" != "${GITHUB_REF_NAME}" ]; then
             echo "El tag ${GITHUB_REF_NAME} no coincide con la versión de package.json ($PKG)"; exit 1
           fi
+      # Se crea la release antes de compilar: si la crea electron-builder, sus subidas en
+      # paralelo pueden generar dos releases con el mismo tag y romper la auto-actualización.
+      - name: Crear la release
+        shell: bash
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
+            gh release create "$GITHUB_REF_NAME" --title "${GITHUB_REF_NAME#v}" --notes "OSF Señalética ${GITHUB_REF_NAME#v}" --latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Construir y publicar instalador (.exe + latest.yml para auto-actualización)
         run: npx electron-builder --win --publish always
         env:
