@@ -64,7 +64,7 @@ function registerIpc({ app, getAdminContents, player, auth, content, settings, d
   // Mensajes del reproductor
   const sendPlayerConfig = () => {
     const s = settings.get();
-    player.send(IPC.PLAYER_CONFIG, { fitMode: s.fitMode, muteVideos: s.muteVideos });
+    player.send(IPC.PLAYER_CONFIG, { fitMode: s.fitMode, muteVideos: s.muteVideos, rotation: s.rotation });
   };
   ipcMain.on(IPC.PLAYER_READY, fromPlayer(() => {
     sendPlayerConfig();

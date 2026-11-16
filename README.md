@@ -60,6 +60,10 @@ npm run dist    # genera el instalador en dist/OSF-Senaletica-Setup-<versión>.e
 2. Ejecutar el instalador `.exe` y abrir **OSF Señalética**.
 3. Iniciar sesión con el usuario de la sucursal.
 4. En **Pantallas**, verificar el monitor de la TV y la sucursal. La TV se abre sola.
+5. **TV vertical:** las piezas se diseñan en **9:16**. Con la TV colgada en vertical, en
+   **Pantallas › Orientación de la TV** elegir la rotación (90° a la derecha o a la izquierda)
+   con la que el contenido se vea derecho. Alternativa: poner la pantalla en *Vertical* desde
+   Windows (Configuración › Pantalla › Orientación) y dejar la app en *Horizontal (sin rotar)*.
 
 ## Estructura
 

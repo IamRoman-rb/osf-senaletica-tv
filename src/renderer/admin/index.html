@@ -124,6 +124,16 @@
           <label class="field" id="branch-other-wrap" hidden>Nombre de la sucursal (tal como figura en el panel web)
             <input id="branch-other" type="text" maxlength="100">
           </label>
+          <label class="field">Orientación de la TV
+            <select id="rotation-select">
+              <option value="0">Horizontal (sin rotar)</option>
+              <option value="90">Vertical — rotar el contenido 90° a la derecha</option>
+              <option value="270">Vertical — rotar el contenido 90° a la izquierda</option>
+              <option value="180">Horizontal invertida (180°)</option>
+            </select>
+          </label>
+          <p class="muted">Las piezas se diseñan en formato 9:16. Si la TV está colgada en vertical, elegí la rotación con la que se vea derecha.
+            Si en Windows ya configuraste la pantalla como <em>Vertical</em> (Configuración › Pantalla › Orientación), dejá <em>Horizontal (sin rotar)</em>.</p>
           <label class="field">Monitor de la TV
             <select id="display-select"></select>
           </label>

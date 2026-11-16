@@ -15,7 +15,14 @@ const DEFAULT_SETTINGS = Object.freeze({
    * null = la sucursal del usuario logueado; '' = todas las sucursales.
    */
   branch: null,
+  /**
+   * Rotación del contenido en grados (0 | 90 | 180 | 270), para TVs colgadas en vertical
+   * cuando Windows sigue configurado en horizontal. Si Windows ya está en "Vertical", dejar 0.
+   */
+  rotation: 0,
 });
+
+const ROTATIONS = Object.freeze([0, 90, 180, 270]);
 
 const MAX_BRANCH_LENGTH = 100;
 
@@ -27,6 +34,7 @@ function sanitizeSettings(partial) {
     out.displayId = partial.displayId === null ? null : Number.isFinite(Number(partial.displayId)) ? Number(partial.displayId) : null;
   }
   if ('fitMode' in partial && ['contain', 'cover'].includes(partial.fitMode)) out.fitMode = partial.fitMode;
+  if ('rotation' in partial && ROTATIONS.includes(Number(partial.rotation))) out.rotation = Number(partial.rotation);
   if ('branch' in partial) {
     out.branch = typeof partial.branch === 'string' ? partial.branch.trim().slice(0, MAX_BRANCH_LENGTH) : null;
   }

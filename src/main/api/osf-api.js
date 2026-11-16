@@ -78,11 +78,11 @@ class MockOsfApi {
     const sample = (file) => pathToFileURL(path.join(this.samplesDir, file)).toString();
     return mapPlaylist(
       {
-        version: 'mock-1',
+        version: 'mock-9x16',
         items: [
-          { id: 'demo-1', type: 'image', url: sample('demo-1.svg'), duration: 6 },
-          { id: 'demo-2', type: 'image', url: sample('demo-2.svg'), duration: 6 },
-          { id: 'demo-3', type: 'image', url: sample('demo-3.svg'), duration: 6 },
+          { id: 'demo-9x16-1', type: 'image', url: sample('demo-1.svg'), duration: 6 },
+          { id: 'demo-9x16-2', type: 'image', url: sample('demo-2.svg'), duration: 6 },
+          { id: 'demo-9x16-3', type: 'image', url: sample('demo-3.svg'), duration: 6 },
         ],
       },
       { defaultImageDurationMs: this.defaultImageDurationMs },

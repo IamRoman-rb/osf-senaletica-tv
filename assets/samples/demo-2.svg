@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
-  <rect width="1920" height="1080" fill="#1D5FD1"/>
-  <text x="960" y="500" fill="#FFFFFF" font-family="Segoe UI, sans-serif" font-size="96" font-weight="700" text-anchor="middle">Pieza de prueba 2</text>
-  <text x="960" y="600" fill="#C9D6EA" font-family="Segoe UI, sans-serif" font-size="40" text-anchor="middle">Modo demo — reemplazada por el contenido del panel web</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <rect width="1080" height="1920" fill="#1D5FD1"/>
+  <rect x="60" y="60" width="960" height="1800" fill="none" stroke="#7FB2FF" stroke-width="6" stroke-dasharray="24 18"/>
+  <text x="540" y="200" fill="#C9D6EA" font-family="Segoe UI, sans-serif" font-size="44" text-anchor="middle">▲ ARRIBA</text>
+  <text x="540" y="920" fill="#FFFFFF" font-family="Segoe UI, sans-serif" font-size="96" font-weight="700" text-anchor="middle">Pieza de prueba 2</text>
+  <text x="540" y="1020" fill="#C9D6EA" font-family="Segoe UI, sans-serif" font-size="44" text-anchor="middle">Formato 9:16 — modo demo</text>
 </svg>

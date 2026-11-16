@@ -17,7 +17,7 @@
   let timer = null;
   let paused = false;
   let consecutiveErrors = 0;
-  let config = { fitMode: 'contain', muteVideos: true };
+  let config = { fitMode: 'contain', muteVideos: true, rotation: 0 };
   let loadToken = 0;
 
   const strategies = {
@@ -151,6 +151,7 @@
   window.player.onConfig((cfg) => {
     config = { ...config, ...cfg };
     document.body.classList.toggle('fit-cover', config.fitMode === 'cover');
+    [90, 180, 270].forEach((deg) => document.body.classList.toggle(`rot-${deg}`, config.rotation === deg));
   });
 
   window.player.onPlaylist((newItems) => {

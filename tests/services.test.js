@@ -25,6 +25,12 @@ test('sanitizeSettings: ignora valores inválidos', () => {
   assert.deepEqual(sanitizeSettings(null), {});
 });
 
+test('sanitizeSettings: sólo acepta rotaciones de 0/90/180/270', () => {
+  assert.deepEqual(sanitizeSettings({ rotation: '90' }), { rotation: 90 });
+  assert.deepEqual(sanitizeSettings({ rotation: 270 }), { rotation: 270 });
+  assert.deepEqual(sanitizeSettings({ rotation: 45 }), {});
+});
+
 test('sanitizeSettings: sucursal null = del usuario, "" = todas', () => {
   assert.deepEqual(sanitizeSettings({ branch: '  Las Toninas ' }), { branch: 'Las Toninas' });
   assert.deepEqual(sanitizeSettings({ branch: '' }), { branch: '' });

@@ -176,12 +176,24 @@
     select.value = String(selected);
     const target = state.displays.find((d) => d.id === state.settings?.displayId)
       ?? state.displays.find((d) => !d.isPrimary) ?? state.displays[0];
-    $('stat-display').textContent = target ? `${target.isPrimary ? 'Principal' : 'TV'} · ${target.width}×${target.height}` : '—';
+    const portrait = isPortrait(target);
+    $('stat-display').textContent = target
+      ? `${target.isPrimary ? 'Principal' : 'TV'} · ${portrait ? 'Vertical' : 'Horizontal'}`
+      : '—';
+    $('preview').classList.toggle('preview--portrait', portrait);
+  }
+
+  /** La TV se ve vertical si se rota el contenido 90°/270° o si Windows ya la tiene en vertical. */
+  function isPortrait(display) {
+    const rotation = state.settings?.rotation ?? 0;
+    const displayPortrait = display ? display.height > display.width : false;
+    return (rotation === 90 || rotation === 270) !== displayPortrait;
   }
 
   function renderSettings() {
     const s = state.settings;
     $('fit-select').value = s.fitMode;
+    $('rotation-select').value = String(s.rotation);
     $('set-autostart').checked = s.autoStartWithWindows;
     $('set-autoplayer').checked = s.autoOpenPlayer;
     $('set-mute').checked = s.muteVideos;
@@ -220,6 +232,7 @@
     const name = e.target.value.trim();
     if (name) saveSettings({ branch: name });
   });
+  $('rotation-select').addEventListener('change', (e) => saveSettings({ rotation: Number(e.target.value) }));
   $('fit-select').addEventListener('change', (e) => saveSettings({ fitMode: e.target.value }));
   $('set-autostart').addEventListener('change', (e) => saveSettings({ autoStartWithWindows: e.target.checked }));
   $('set-autoplayer').addEventListener('change', (e) => saveSettings({ autoOpenPlayer: e.target.checked }));

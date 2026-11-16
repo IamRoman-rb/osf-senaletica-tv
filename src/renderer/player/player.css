@@ -10,11 +10,25 @@ body {
   user-select: none;
 }
 
+/*
+ * El escenario se centra y se rota según el ajuste de orientación.
+ * En 90°/270° se intercambian ancho y alto para que, una vez girado,
+ * ocupe exactamente la pantalla de la TV colgada en vertical.
+ */
 #stage {
   position: fixed;
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  width: 100vw;
+  height: 100vh;
   background: #000;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
 }
+
+body.rot-90 #stage { width: 100vh; height: 100vw; transform: translate(-50%, -50%) rotate(90deg); }
+body.rot-180 #stage { transform: translate(-50%, -50%) rotate(180deg); }
+body.rot-270 #stage { width: 100vh; height: 100vw; transform: translate(-50%, -50%) rotate(270deg); }
 
 .layer {
   position: absolute;
