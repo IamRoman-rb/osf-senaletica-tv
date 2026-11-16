@@ -80,6 +80,28 @@ test('errores del servidor -> mensajes y clasificación', () => {
   assert.match(ApiError.fromResponse(500, null).message, /500/);
 });
 
+test('URLs http del mismo dominio que la API se piden por https', () => {
+  const { upgradeToApiProtocol } = require('../src/main/api/osf-api');
+  const api = new URL('https://osfbrokerdeseguros.com/api');
+  assert.equal(
+    upgradeToApiProtocol('http://osfbrokerdeseguros.com/uploads/screens/a.jpg', api),
+    'https://osfbrokerdeseguros.com/uploads/screens/a.jpg',
+  );
+  assert.equal(upgradeToApiProtocol('http://otro-sitio.com/a.jpg', api), 'http://otro-sitio.com/a.jpg', 'otros dominios no se tocan');
+  const local = new URL('http://localhost:4001/api');
+  assert.equal(upgradeToApiProtocol('http://localhost:4001/uploads/a.jpg', local), 'http://localhost:4001/uploads/a.jpg');
+});
+
+test('playlist real: corrige URLs http del servidor', async () => {
+  const { fetchImpl } = fakeFetch(() => Response.json({
+    updatedAt: 'x',
+    items: [{ id: 'Z', tipo: 'imagen', mimeType: 'image/jpeg', url: 'http://osf.test/uploads/screens/a.jpg', duracion: 10 }],
+  }));
+  const api = new HttpOsfApi({ baseUrl: 'https://osf.test/api', timeoutMs: 1000, endpoints, defaultImageDurationMs: 10000, machine, fetchImpl });
+  const { items } = await api.fetchPlaylist('tok');
+  assert.equal(items[0].url, 'https://osf.test/uploads/screens/a.jpg');
+});
+
 test('mapLoginResponse: sin token es respuesta inválida', () => {
   assert.throws(() => mapLoginResponse({}, 'u'), (err) => err.code === 'INVALID_RESPONSE');
 });

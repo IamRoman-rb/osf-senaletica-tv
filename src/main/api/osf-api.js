@@ -49,8 +49,32 @@ class HttpOsfApi {
       token,
       headers: { 'X-Machine-Id': this.machine.id },
     });
-    return mapPlaylist(data, { defaultImageDurationMs: this.defaultImageDurationMs });
+    const playlist = mapPlaylist(data, { defaultImageDurationMs: this.defaultImageDurationMs });
+    const apiUrl = new URL(this.http.baseUrl);
+    return {
+      ...playlist,
+      items: playlist.items.map((item) => ({ ...item, url: upgradeToApiProtocol(item.url, apiUrl) })),
+    };
   }
+}
+
+/**
+ * Detrás de nginx el servidor puede armar las URLs de archivos con http:// aunque el sitio
+ * sea https. Si el archivo es del mismo dominio que la API y la API es https, se pide por https.
+ * Otros dominios no se tocan (siguen sujetos a la regla de sólo HTTPS).
+ */
+function upgradeToApiProtocol(url, apiUrl) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'http:' && apiUrl.protocol === 'https:' && parsed.hostname === apiUrl.hostname) {
+      parsed.protocol = 'https:';
+      if (parsed.port === '80') parsed.port = '';
+      return parsed.toString();
+    }
+  } catch {
+    /* URL inválida: la descarga fallará y se registrará */
+  }
+  return url;
 }
 
 /** Respuesta del login -> Session interna. Función pura (testeable). */
@@ -108,4 +132,4 @@ function createOsfApi(apiConfig, { samplesDir, defaultImageDurationMs, machine }
   return new MockOsfApi({ samplesDir, defaultImageDurationMs });
 }
 
-module.exports = { createOsfApi, HttpOsfApi, MockOsfApi, mapLoginResponse };
+module.exports = { createOsfApi, HttpOsfApi, MockOsfApi, mapLoginResponse, upgradeToApiProtocol };
