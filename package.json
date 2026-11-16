@@ -1,7 +1,7 @@
 {
   "name": "osf-senaletica",
   "productName": "OSF Senaletica",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Señalética digital para las TVs de las sucursales de Organización San Francisco - Broker de Seguros",
   "main": "src/main/main.js",
   "author": "Organización San Francisco",
