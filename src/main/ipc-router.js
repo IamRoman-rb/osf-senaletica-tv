@@ -7,7 +7,7 @@ const { IPC } = require('../shared/ipc-channels');
  * Registra los handlers IPC (patrón Facade: la UI sólo ve estas operaciones).
  * Cada handler verifica que el mensaje venga de la ventana correcta.
  */
-function registerIpc({ app, getAdminContents, player, auth, content, settings, displays, updates, onLoggedIn }) {
+function registerIpc({ app, getAdminContents, player, auth, content, settings, displays, updates, machine, onLoggedIn }) {
   const fromAdmin = (handler) => async (event, ...args) => {
     if (event.sender !== getAdminContents()) throw new Error('Origen IPC no autorizado');
     return handler(...args);
@@ -22,6 +22,8 @@ function registerIpc({ app, getAdminContents, player, auth, content, settings, d
   ipcMain.handle(IPC.APP_INFO, fromAdmin(() => ({
     version: app.getVersion(),
     apiMode: require('./config').config.api.mode,
+    machineId: machine.id,
+    machineName: machine.name,
   })));
 
   ipcMain.handle(IPC.AUTH_SESSION, fromAdmin(() => auth.publicSession()));
@@ -35,7 +37,7 @@ function registerIpc({ app, getAdminContents, player, auth, content, settings, d
     }
   }));
   ipcMain.handle(IPC.AUTH_LOGOUT, fromAdmin(() => {
-    auth.logout('manual');
+    auth.logout();
     return true;
   }));
 
@@ -87,7 +89,10 @@ function registerIpc({ app, getAdminContents, player, auth, content, settings, d
     if (wc && !wc.isDestroyed()) wc.send(channel, payload);
   }
 
-  auth.on('change', (session) => emitToAdmin(IPC.EVT_SESSION, session));
+  auth.on('change', (session, reason, message) => {
+    emitToAdmin(IPC.EVT_SESSION, session);
+    if (reason === 'expired') emitToAdmin(IPC.EVT_AUTH_NOTICE, message);
+  });
   content.on('status', (status) => emitToAdmin(IPC.EVT_CONTENT_STATUS, status));
   content.on('playlist', (items) => {
     player.send(IPC.PLAYER_PLAYLIST, items);

@@ -31,19 +31,7 @@ test('sanitizeSettings: sólo acepta rotaciones de 0/90/180/270', () => {
   assert.deepEqual(sanitizeSettings({ rotation: 45 }), {});
 });
 
-test('sanitizeSettings: sucursal null = del usuario, "" = todas', () => {
-  assert.deepEqual(sanitizeSettings({ branch: '  Las Toninas ' }), { branch: 'Las Toninas' });
-  assert.deepEqual(sanitizeSettings({ branch: '' }), { branch: '' });
-  assert.deepEqual(sanitizeSettings({ branch: 5 }), { branch: null });
-});
 
-test('buildPlaylistPath: arma /screens?sucursal= codificado', () => {
-  const { buildPlaylistPath } = require('../src/main/api/osf-api');
-  const endpoints = { playlist: '/screens', branchParam: 'sucursal' };
-  assert.equal(buildPlaylistPath(endpoints, null), '/screens');
-  assert.equal(buildPlaylistPath(endpoints, ''), '/screens');
-  assert.equal(buildPlaylistPath(endpoints, 'San Francisco Solano'), '/screens?sucursal=San%20Francisco%20Solano');
-});
 
 test('pickTargetDisplay: preferido > secundario > principal', () => {
   const displays = [{ id: 1 }, { id: 2 }, { id: 3 }];

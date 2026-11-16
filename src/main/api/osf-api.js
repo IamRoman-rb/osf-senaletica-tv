@@ -9,50 +9,60 @@ const { mapPlaylist } = require('./playlist-mapper');
 /**
  * Contrato de la API de OSF (patrón Adapter + Strategy).
  * La app sólo conoce esta interfaz; hay dos implementaciones intercambiables:
- *   - HttpOsfApi: servidor real.
+ *   - HttpOsfApi: servidor real (server/routes/screens.js).
  *   - MockOsfApi: datos locales para desarrollo y demos.
  *
+ * @typedef {{ username: string, password: string }} Credentials
  * @typedef {{ token: string, user: { username: string, displayName: string, branch: string|null }, expiresAt: string|null }} Session
- * @typedef {{ version: string, items: Array<{id:string,type:'image'|'video',url:string,durationMs:number|null,checksum:string|null}> }} Playlist
+ * @typedef {{ version: string, items: Array<{id:string,type:'image'|'video',url:string,title:string|null,durationMs:number|null,checksum:string|null}> }} Playlist
  */
 
 class HttpOsfApi {
-  constructor({ baseUrl, timeoutMs, endpoints, defaultImageDurationMs, fetchImpl }) {
+  constructor({ baseUrl, timeoutMs, endpoints, defaultImageDurationMs, machine, fetchImpl }) {
     this.http = new HttpClient({ baseUrl, timeoutMs, fetchImpl });
     this.endpoints = endpoints;
     this.defaultImageDurationMs = defaultImageDurationMs;
-  }
-
-  /** @returns {Promise<Session>} */
-  async login(username, password) {
-    // TODO(endpoints): ajustar cuerpo y mapeo de la respuesta al endpoint real de login.
-    const data = await this.http.request(this.endpoints.login, {
-      method: 'POST',
-      body: { username, password },
-    });
-    const token = data?.token ?? data?.accessToken ?? data?.access_token;
-    if (!token) throw new ApiError('El servidor no devolvió un token de sesión', { code: 'INVALID_RESPONSE' });
-    return {
-      token,
-      user: {
-        username,
-        displayName: data?.user?.name ?? data?.user?.displayName ?? username,
-        branch: data?.user?.branch ?? data?.branch ?? null,
-      },
-      expiresAt: data?.expiresAt ?? null,
-    };
+    this.machine = machine;
   }
 
   /**
-   * GET /screens?sucursal=<branch>
-   * @param {string} token
-   * @param {{ branch?: string|null }} [options]
+   * POST /api/screens/login
+   * Body: { username, password, machineId, machineName }
+   * Respuesta: { token, expiresIn (s), username, sucursal }
+   * @param {Credentials} credentials
+   * @returns {Promise<Session>}
+   */
+  async login({ username, password }) {
+    const data = await this.http.request(this.endpoints.login, {
+      method: 'POST',
+      body: { username, password, machineId: this.machine.id, machineName: this.machine.name },
+    });
+    return mapLoginResponse(data, username);
+  }
+
+  /**
+   * GET /api/screens (el servidor ya filtra por la sucursal del usuario, activos y fechas).
    * @returns {Promise<Playlist>}
    */
-  async fetchPlaylist(token, { branch } = {}) {
-    const data = await this.http.request(buildPlaylistPath(this.endpoints, branch), { token });
+  async fetchPlaylist(token) {
+    const data = await this.http.request(this.endpoints.playlist, {
+      token,
+      headers: { 'X-Machine-Id': this.machine.id },
+    });
     return mapPlaylist(data, { defaultImageDurationMs: this.defaultImageDurationMs });
   }
+}
+
+/** Respuesta del login -> Session interna. Función pura (testeable). */
+function mapLoginResponse(data, fallbackUsername, now = Date.now()) {
+  if (!data?.token) throw new ApiError('El servidor no devolvió un token de sesión', { code: 'INVALID_RESPONSE' });
+  const expiresIn = Number(data.expiresIn);
+  const username = data.username ?? fallbackUsername;
+  return {
+    token: data.token,
+    user: { username, displayName: username, branch: data.sucursal ?? null },
+    expiresAt: Number.isFinite(expiresIn) && expiresIn > 0 ? new Date(now + expiresIn * 1000).toISOString() : null,
+  };
 }
 
 class MockOsfApi {
@@ -61,16 +71,12 @@ class MockOsfApi {
     this.defaultImageDurationMs = defaultImageDurationMs;
   }
 
-  async login(username, password) {
+  async login({ username, password }) {
     await delay(400);
     if (!username || !password || password.length < 4) {
-      throw new ApiError('Usuario o contraseña incorrectos', { code: 'UNAUTHORIZED', status: 401 });
+      throw ApiError.fromResponse(401, { code: 'INVALID_CREDENTIALS' });
     }
-    return {
-      token: `mock-token-${Date.now()}`,
-      user: { username, displayName: username, branch: 'Sucursal de prueba' },
-      expiresAt: null,
-    };
+    return mapLoginResponse({ token: `mock-token-${Date.now()}`, expiresIn: 2592000, username, sucursal: 'Sucursal de prueba' }, username);
   }
 
   async fetchPlaylist() {
@@ -78,11 +84,11 @@ class MockOsfApi {
     const sample = (file) => pathToFileURL(path.join(this.samplesDir, file)).toString();
     return mapPlaylist(
       {
-        version: 'mock-9x16',
+        updatedAt: 'mock-9x16',
         items: [
-          { id: 'demo-9x16-1', type: 'image', url: sample('demo-1.svg'), duration: 6 },
-          { id: 'demo-9x16-2', type: 'image', url: sample('demo-2.svg'), duration: 6 },
-          { id: 'demo-9x16-3', type: 'image', url: sample('demo-3.svg'), duration: 6 },
+          { id: 'demo-9x16-1', tipo: 'imagen', titulo: 'Pieza de prueba 1', url: sample('demo-1.svg'), duracion: 6 },
+          { id: 'demo-9x16-2', tipo: 'imagen', titulo: 'Pieza de prueba 2', url: sample('demo-2.svg'), duracion: 6 },
+          { id: 'demo-9x16-3', tipo: 'imagen', titulo: 'Pieza de prueba 3', url: sample('demo-3.svg'), duracion: 6 },
         ],
       },
       { defaultImageDurationMs: this.defaultImageDurationMs },
@@ -90,24 +96,16 @@ class MockOsfApi {
   }
 }
 
-/** '/screens' + '?sucursal=Las%20Toninas' (sin sucursal = todas). */
-function buildPlaylistPath(endpoints, branch) {
-  const name = typeof branch === 'string' ? branch.trim() : '';
-  if (!name) return endpoints.playlist;
-  const sep = endpoints.playlist.includes('?') ? '&' : '?';
-  return `${endpoints.playlist}${sep}${encodeURIComponent(endpoints.branchParam ?? 'sucursal')}=${encodeURIComponent(name)}`;
-}
-
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /** Factory: elige la implementación según configuración. */
-function createOsfApi(apiConfig, { samplesDir, defaultImageDurationMs }) {
+function createOsfApi(apiConfig, { samplesDir, defaultImageDurationMs, machine }) {
   if (apiConfig.mode === 'http') {
-    return new HttpOsfApi({ ...apiConfig, defaultImageDurationMs });
+    return new HttpOsfApi({ ...apiConfig, defaultImageDurationMs, machine });
   }
   return new MockOsfApi({ samplesDir, defaultImageDurationMs });
 }
 
-module.exports = { createOsfApi, HttpOsfApi, MockOsfApi, buildPlaylistPath };
+module.exports = { createOsfApi, HttpOsfApi, MockOsfApi, mapLoginResponse };

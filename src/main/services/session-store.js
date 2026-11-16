@@ -5,7 +5,10 @@ const path = require('node:path');
 
 /**
  * Guarda la sesión cifrada con el almacén seguro del sistema operativo
- * (DPAPI en Windows, vía Electron safeStorage). Nunca se guarda la contraseña.
+ * (DPAPI en Windows, vía Electron safeStorage): sólo el usuario de Windows de este
+ * equipo puede descifrarla. Si se eligió "Recordar este equipo" incluye las credenciales
+ * del usuario de pantalla, para renovar el token sin intervención. Si el cifrado del
+ * sistema no está disponible, no se guarda nada en disco.
  */
 class SessionStore {
   constructor({ dir, safeStorage, logger }) {

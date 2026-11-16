@@ -23,12 +23,22 @@ Base: `https://osfbrokerdeseguros.com/api` — toda la integración está en `sr
 
 | Uso | Método y ruta | Notas |
 |---|---|---|
-| Inicio de sesión | `POST /auth/login` *(a confirmar)* | Body `{ username, password }` → `{ token, user: { name, branch }, expiresAt }` |
-| Contenido | `GET /screens?sucursal=<nombre>` | Requiere `Authorization: Bearer <token>`. Sin `sucursal` devuelve todas. |
+| Inicio de sesión | `POST /screens/login` | Body `{ username, password, machineId, machineName }` → `{ token, expiresIn, username, sucursal }`. Token de 30 días. |
+| Contenido | `GET /screens` | Headers `Authorization: Bearer <token>` y `X-Machine-Id`. Devuelve `{ updatedAt, sucursal, total, items: [{ id, tipo, url, titulo, duracion, orden, mimeType }] }`, ya filtrado por la sucursal del usuario. |
 
-La respuesta de `/screens` se traduce en `src/main/api/playlist-mapper.js`, que acepta un
-arreglo o `{ items: [...] }` con campos `id`, `url`/`src`, `type`/`mimeType`, `duration` (s) u
-`durationMs`, `order`, `active`. Si el formato real difiere, sólo se ajusta ese archivo.
+- **Usuarios de pantalla:** se crean en el panel web (usuarios de pantalla). Las credenciales de admin no sirven.
+- **Vinculación al equipo:** el primer equipo que inicia sesión queda vinculado al usuario. El `machineId`
+  se deriva del MachineGuid de Windows (hasheado), así que no cambia al reinstalar. Para mover un usuario
+  a otra PC, un admin lo desvincula desde el panel. El ID se ve en **Ajustes › Este equipo**.
+- **Renovación automática:** con *Recordar este equipo*, las credenciales se guardan cifradas con DPAPI y
+  la app vuelve a iniciar sesión sola cuando el token vence (`INVALID_TOKEN`) o está por vencer.
+- **Errores:** `INVALID_CREDENTIALS`, `DEVICE_DISABLED`, `TOO_MANY_ATTEMPTS`, `MACHINE_MISMATCH` e
+  `INVALID_TOKEN` se muestran con mensajes claros (`src/main/api/api-error.js`). Si la sesión deja de ser
+  válida, la TV sigue mostrando el contenido en caché hasta que alguien vuelva a iniciar sesión.
+
+El mapeo de la respuesta está en `src/main/api/playlist-mapper.js`.
+
+**Servidor local:** `$env:OSF_API_MODE='http'; $env:OSF_API_BASE_URL='http://localhost:4001/api'; npm.cmd start`
 
 Variables de entorno opcionales: `OSF_API_MODE` (`http` | `mock`), `OSF_API_BASE_URL`,
 `OSF_API_LOGIN_PATH`, `OSF_API_PLAYLIST_PATH`, `OSF_SYNC_INTERVAL_MS`.
@@ -58,8 +68,8 @@ npm run dist    # genera el instalador en dist/OSF-Senaletica-Setup-<versión>.e
 
 1. Conectar la TV a la PC por HDMI como **segundo monitor** (modo *Extender*).
 2. Ejecutar el instalador `.exe` y abrir **OSF Señalética**.
-3. Iniciar sesión con el usuario de la sucursal.
-4. En **Pantallas**, verificar el monitor de la TV y la sucursal. La TV se abre sola.
+3. Iniciar sesión con el **usuario de pantalla** de la sucursal (dejar marcado *Recordar este equipo*).
+4. En **Pantallas**, verificar el monitor de la TV. La TV se abre sola.
 5. **TV vertical:** las piezas se diseñan en **9:16**. Con la TV colgada en vertical, en
    **Pantallas › Orientación de la TV** elegir la rotación (90° a la derecha o a la izquierda)
    con la que el contenido se vea derecho. Alternativa: poner la pantalla en *Vertical* desde

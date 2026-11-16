@@ -37,11 +37,9 @@ class HttpClient {
       clearTimeout(timer);
     }
 
-    if (response.status === 401 || response.status === 403) {
-      throw new ApiError('Usuario o contraseña incorrectos, o sesión vencida', { code: 'UNAUTHORIZED', status: response.status });
-    }
     if (!response.ok) {
-      throw new ApiError(`El servidor respondió con error ${response.status}`, { code: 'SERVER', status: response.status });
+      const errorBody = await response.json().catch(() => null);
+      throw ApiError.fromResponse(response.status, errorBody);
     }
     try {
       return await response.json();

@@ -121,8 +121,8 @@
           el('span', { className: 'sequence__n', text: String(i + 1) }),
           thumb,
           el('div', { className: 'sequence__info' }, [
-            el('strong', { text: item.type === 'video' ? 'Video' : 'Imagen' }),
-            el('span', { text: item.id }),
+            el('strong', { text: item.title || (item.type === 'video' ? 'Video' : 'Imagen') }),
+            el('span', { text: item.type === 'video' ? 'Video' : 'Imagen' }),
           ]),
           el('span', { className: 'pill', text: formatDuration(item) }),
         ]);
@@ -198,20 +198,7 @@
     $('set-autostart').checked = s.autoStartWithWindows;
     $('set-autoplayer').checked = s.autoOpenPlayer;
     $('set-mute').checked = s.muteVideos;
-    renderBranch(s.branch);
     renderDisplays();
-  }
-
-  function renderBranch(branch) {
-    const select = $('branch-select');
-    const known = Array.from(select.options).map((o) => o.value);
-    let value;
-    if (branch === null) value = '__user__';
-    else if (known.includes(branch)) value = branch;
-    else value = '__other__';
-    select.value = value;
-    $('branch-other-wrap').hidden = value !== '__other__';
-    if (value === '__other__' && document.activeElement !== $('branch-other')) $('branch-other').value = branch;
   }
 
   async function saveSettings(partial) {
@@ -220,19 +207,6 @@
   }
 
   $('display-select').addEventListener('change', (e) => saveSettings({ displayId: e.target.value === '' ? null : Number(e.target.value) }));
-  $('branch-select').addEventListener('change', (e) => {
-    const value = e.target.value;
-    if (value === '__other__') {
-      $('branch-other-wrap').hidden = false;
-      $('branch-other').focus();
-      return;
-    }
-    saveSettings({ branch: value === '__user__' ? null : value });
-  });
-  $('branch-other').addEventListener('change', (e) => {
-    const name = e.target.value.trim();
-    if (name) saveSettings({ branch: name });
-  });
   $('rotation-select').addEventListener('change', (e) => saveSettings({ rotation: Number(e.target.value) }));
 
   const ROTATION_LABELS = { 0: '0° · Horizontal', 90: '90° · Vertical', 180: '180° · Invertida', 270: '270° · Vertical' };
@@ -285,6 +259,12 @@
   }
 
   api.auth.onChange(showView);
+  // Sesión rechazada por el servidor: se pide login otra vez (la TV sigue mostrando la caché).
+  api.auth.onNotice((message) => {
+    const box = $('login-error');
+    box.textContent = `${message} La TV sigue mostrando el último contenido descargado.`;
+    box.hidden = false;
+  });
   api.content.onStatus(renderContentStatus);
   api.content.onItems((items) => { state.items = items; renderSequence(); });
   api.player.onState((player) => { state.player = player; renderPlayer(); });
@@ -295,6 +275,8 @@
     const [info, session, updates] = await Promise.all([api.app.info(), api.auth.session(), api.updates.status()]);
     $('login-version').textContent = `v${info.version}`;
     $('login-api-mode').textContent = info.apiMode === 'mock' ? 'Modo demo (datos de prueba)' : 'Servidor: OSF';
+    $('machine-name').textContent = info.machineName;
+    $('machine-id').textContent = info.machineId;
     renderUpdates(updates);
     showView(session);
   })();

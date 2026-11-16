@@ -30,13 +30,15 @@ const config = Object.freeze({
     mode: readEnv('OSF_API_MODE', isPackaged() ? 'http' : 'mock'),
     baseUrl: readEnv('OSF_API_BASE_URL', 'https://osfbrokerdeseguros.com/api'),
     timeoutMs: Number(readEnv('OSF_API_TIMEOUT_MS', 15000)),
-    /** Rutas relativas a baseUrl. */
+    /**
+     * Rutas relativas a baseUrl (server/routes/screens.js).
+     * En local: OSF_API_BASE_URL=http://localhost:4001/api
+     */
     endpoints: Object.freeze({
-      // TODO(endpoints): confirmar ruta de login con el equipo web.
-      login: readEnv('OSF_API_LOGIN_PATH', '/auth/login'),
-      /** GET /screens?sucursal=<nombre>  (sin parámetro = todas las sucursales). Requiere Bearer token. */
+      /** POST { username, password, machineId, machineName } -> { token, expiresIn, username, sucursal } */
+      login: readEnv('OSF_API_LOGIN_PATH', '/screens/login'),
+      /** GET con Authorization: Bearer + X-Machine-Id. Ya filtrado por la sucursal del usuario. */
       playlist: readEnv('OSF_API_PLAYLIST_PATH', '/screens'),
-      branchParam: 'sucursal',
     }),
   }),
   sync: Object.freeze({

@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('osf', Object.freeze({
     login: invoke('auth:login'),
     logout: invoke('auth:logout'),
     onChange: subscribe('evt:session'),
+    onNotice: subscribe('evt:auth-notice'),
   },
   content: {
     status: invoke('content:status'),

@@ -8,16 +8,15 @@ const { EventEmitter } = require('node:events');
  * Eventos (patrón Observer):
  *   'status'       -> ContentStatus (para el panel de administración)
  *   'playlist'     -> PlayerItem[]  (para la ventana de la TV)
- *   'unauthorized' -> la sesión dejó de ser válida
+ *   'unauthorized' -> (mensaje) la sesión dejó de ser válida y no se pudo renovar
  *
  * @typedef {{ state: 'idle'|'syncing'|'ok'|'offline'|'error', lastSyncAt: string|null, version: string|null,
  *             itemCount: number, progress: { done: number, total: number }|null, message: string|null }} ContentStatus
  */
 class ContentService extends EventEmitter {
-  constructor({ api, auth, cache, manifestStore, mediaScheme, syncConfig, logger, getBranch = () => null }) {
+  constructor({ api, auth, cache, manifestStore, mediaScheme, syncConfig, logger }) {
     super();
     this.api = api;
-    this.getBranch = getBranch;
     this.auth = auth;
     this.cache = cache;
     this.manifestStore = manifestStore;
@@ -66,6 +65,7 @@ class ContentService extends EventEmitter {
       .map((item) => ({
         id: item.id,
         type: item.type,
+        title: item.title ?? null,
         src: `${this.mediaScheme}://media/${item.fileName}`,
         durationMs: item.durationMs,
       }));
@@ -88,22 +88,31 @@ class ContentService extends EventEmitter {
     return this.inFlight;
   }
 
+  /** Pide la playlist; si el token venció, renueva la sesión una vez y reintenta. */
+  async #fetchPlaylist() {
+    await this.auth.refreshIfExpiring();
+    try {
+      return await this.api.fetchPlaylist(this.auth.token);
+    } catch (err) {
+      if (!err.isRecoverableByLogin || !(await this.auth.refresh())) throw err;
+      return this.api.fetchPlaylist(this.auth.token);
+    }
+  }
+
   async #sync() {
-    const token = this.auth.token;
-    if (!token) return;
+    if (!this.auth.token) return;
     clearTimeout(this.timer);
     this.#setStatus({ state: 'syncing', progress: null, message: null });
 
     let nextDelay = this.syncConfig.intervalMs;
     try {
-      const branch = this.getBranch();
-      const playlist = await this.api.fetchPlaylist(token, { branch });
+      const playlist = await this.#fetchPlaylist();
       const ready = await this.cache.ensure(playlist.items, (done, total) =>
         this.#setStatus({ progress: { done, total } }),
       );
       const fingerprint = ready.map((i) => i.fileName).join('|');
       const changed = !this.manifest || this.manifest.fingerprint !== fingerprint;
-      this.manifest = { version: playlist.version, branch, fingerprint, syncedAt: new Date().toISOString(), items: ready };
+      this.manifest = { version: playlist.version, fingerprint, syncedAt: new Date().toISOString(), items: ready };
       this.manifestStore.write(this.manifest);
       await this.cache.prune(ready.map((i) => i.fileName));
 
@@ -124,7 +133,7 @@ class ContentService extends EventEmitter {
       if (err.isAuthError) {
         this.logger.warn('Sesión rechazada por el servidor');
         this.#setStatus({ state: 'error', progress: null, message: err.message });
-        this.emit('unauthorized');
+        this.emit('unauthorized', err.message);
         return;
       }
       const state = err.isConnectivityError ? 'offline' : 'error';

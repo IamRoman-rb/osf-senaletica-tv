@@ -19,7 +19,9 @@
 - Content-Security-Policy estricta en ambas páginas (sin scripts inline ni recursos externos).
 - Navegación, ventanas emergentes y `<webview>` bloqueados.
 - IPC: cada handler verifica que el mensaje venga de la ventana esperada; las entradas se validan (`sanitizeSettings`).
-- Token de sesión cifrado con DPAPI de Windows (`safeStorage`); la contraseña nunca se guarda ni se registra en logs.
+- Sesión cifrada con DPAPI de Windows (`safeStorage`). Con *Recordar este equipo* incluye las credenciales del
+  usuario de pantalla (no de un admin) para renovar el token sin intervención; nunca se escriben en logs.
+- `machineId` derivado del MachineGuid con SHA-256: identifica el equipo sin exponer el GUID real.
 - Sólo HTTPS hacia la API y para descargar medios; verificación SHA-256 opcional si el servidor envía `checksum`.
 - Protocolo `osf-media://` que sólo sirve nombres con formato de hash: no permite leer otros archivos del disco.
 - Instancia única por equipo.

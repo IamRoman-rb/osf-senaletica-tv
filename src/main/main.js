@@ -13,6 +13,7 @@ const { MediaCache } = require('./services/media-cache');
 const { ContentService } = require('./services/content-service');
 const { DisplayService } = require('./services/display-service');
 const { UpdateService } = require('./services/update-service');
+const { resolveMachineIdentity } = require('./services/machine-identity');
 const { PlayerWindowController } = require('./windows/player-window');
 const { createAdminWindow } = require('./windows/admin-window');
 const { registerMediaSchemePrivileges, handleMediaScheme } = require('./media-protocol');
@@ -25,22 +26,29 @@ if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   registerMediaSchemePrivileges(config.security.mediaScheme);
-  app.whenReady().then(bootstrap);
+  app.whenReady().then(bootstrap).catch((err) => {
+    console.error('Error fatal al iniciar', err);
+    app.exit(1);
+  });
 }
 
 /** Composition Root: acá se crean y conectan todas las dependencias (inyección de dependencias). */
-function bootstrap() {
+async function bootstrap() {
   const userData = app.getPath('userData');
   const logger = new Logger({ dir: path.join(userData, 'logs'), level: app.isPackaged ? 'info' : 'debug' });
   const log = (scope) => logger.child(scope);
-  logger.info(`Iniciando OSF Señalética v${app.getVersion()} (API: ${config.api.mode})`);
+  logger.info(`Iniciando OSF Señalética v${app.getVersion()} (API: ${config.api.mode} ${config.api.baseUrl})`);
 
   process.on('uncaughtException', (err) => logger.error('Excepción no controlada', err));
   process.on('unhandledRejection', (err) => logger.error('Promesa rechazada sin manejar', err));
 
+  const machine = await resolveMachineIdentity({ userDataDir: userData, logger: log('machine') });
+  logger.info(`Equipo: ${machine.name} (${machine.id})`);
+
   const api = createOsfApi(config.api, {
     samplesDir: path.join(app.getAppPath(), 'assets', 'samples'),
     defaultImageDurationMs: config.player.defaultImageDurationMs,
+    machine,
   });
   const settings = new SettingsService({ store: new JsonFileStore(path.join(userData, 'settings.json')) });
   const auth = new AuthService({
@@ -57,11 +65,6 @@ function bootstrap() {
     mediaScheme: config.security.mediaScheme,
     syncConfig: config.sync,
     logger: log('content'),
-    // Ajuste explícito > sucursal del usuario logueado > todas
-    getBranch: () => settings.get().branch ?? auth.publicSession()?.user.branch ?? null,
-  });
-  settings.on('change', (_s, changes) => {
-    if ('branch' in changes && auth.token) content.syncNow();
   });
   const displays = new DisplayService({ screen });
   const player = new PlayerWindowController({ displayService: displays, settingsService: settings, logger: log('player') });
@@ -96,16 +99,17 @@ function bootstrap() {
     settings,
     displays,
     updates,
+    machine,
     onLoggedIn: startSession,
   });
 
-  auth.on('change', (session) => {
-    if (!session) {
-      content.stop();
-      player.close();
-    }
+  auth.on('change', (session, reason) => {
+    if (session) return;
+    content.stop();
+    // Cierre manual: se apaga la TV. Sesión vencida/rechazada: la TV sigue mostrando la caché.
+    if (reason === 'manual') player.close();
   });
-  content.on('unauthorized', () => auth.logout('sesión rechazada por el servidor'));
+  content.on('unauthorized', (message) => auth.expire(message));
 
   const applyLoginItem = (s) => {
     if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: s.autoStartWithWindows });

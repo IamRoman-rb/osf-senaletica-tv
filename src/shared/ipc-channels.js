@@ -27,6 +27,7 @@ const IPC = Object.freeze({
 
   // Main -> Admin (eventos)
   EVT_SESSION: 'evt:session',
+  EVT_AUTH_NOTICE: 'evt:auth-notice',
   EVT_CONTENT_STATUS: 'evt:content-status',
   EVT_CONTENT_ITEMS: 'evt:content-items',
   EVT_PLAYER_STATE: 'evt:player-state',

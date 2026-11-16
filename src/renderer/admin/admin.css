@@ -157,6 +157,7 @@ p { margin: 0; }
 
 .form-card { display: flex; flex-direction: column; gap: 18px; max-width: 720px; }
 .update-row { display: flex; justify-content: space-between; gap: 12px; }
+.mono { font-family: Consolas, 'Cascadia Mono', monospace; font-size: 13px; word-break: break-all; user-select: all; }
 
 @media (max-width: 900px) {
   .sidebar { width: 200px; }

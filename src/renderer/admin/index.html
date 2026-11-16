@@ -32,7 +32,7 @@
       <form id="login-form" class="login__form" novalidate>
         <div>
           <h2>Iniciar sesión</h2>
-          <p class="muted">Usá las credenciales de tu sucursal</p>
+          <p class="muted">Usá el usuario de pantalla de tu sucursal (creado en el panel web, sección usuarios de pantalla)</p>
         </div>
         <label class="field">Usuario
           <input id="login-user" name="username" type="text" autocomplete="username" required>
@@ -40,7 +40,7 @@
         <label class="field">Contraseña
           <input id="login-pass" name="password" type="password" autocomplete="current-password" required>
         </label>
-        <label class="check"><input id="login-remember" type="checkbox" checked> Recordar este equipo</label>
+        <label class="check"><input id="login-remember" type="checkbox" checked> Recordar este equipo (la TV renueva la sesión sola)</label>
         <p id="login-error" class="form-error" role="alert" hidden></p>
         <button id="login-submit" type="submit" class="btn btn--primary btn--block">Ingresar</button>
         <div class="login__footer muted"><span id="login-api-mode"></span><span id="login-version"></span></div>
@@ -124,18 +124,6 @@
       <section data-view="screens" class="view" hidden>
         <header class="page-head"><div><h1>Pantallas</h1><p class="muted">Elegí en qué monitor se muestra la publicidad</p></div></header>
         <div class="card form-card">
-          <label class="field">Contenido de la sucursal
-            <select id="branch-select">
-              <option value="__user__">Según el usuario que inició sesión</option>
-              <option value="">Todas las sucursales</option>
-              <option value="Las Toninas">Las Toninas</option>
-              <option value="San Francisco Solano">San Francisco Solano</option>
-              <option value="__other__">Otra…</option>
-            </select>
-          </label>
-          <label class="field" id="branch-other-wrap" hidden>Nombre de la sucursal (tal como figura en el panel web)
-            <input id="branch-other" type="text" maxlength="100">
-          </label>
           <label class="field">Orientación de la TV
             <select id="rotation-select">
               <option value="0">Horizontal (sin rotar)</option>
@@ -181,6 +169,12 @@
           <label class="check"><input type="checkbox" id="set-autostart"> Iniciar con Windows</label>
           <label class="check"><input type="checkbox" id="set-autoplayer"> Abrir la TV automáticamente al iniciar sesión</label>
           <label class="check"><input type="checkbox" id="set-mute"> Reproducir videos sin sonido</label>
+        </div>
+        <div class="card form-card">
+          <h2>Este equipo</h2>
+          <p class="muted">El usuario de pantalla queda vinculado a este equipo. Para usarlo en otra PC, un administrador debe desvincularlo desde el panel web.</p>
+          <div class="update-row"><span class="muted">Nombre</span><strong id="machine-name">—</strong></div>
+          <div class="update-row"><span class="muted">ID del equipo</span><code id="machine-id" class="mono">—</code></div>
         </div>
       </section>
     </main>
