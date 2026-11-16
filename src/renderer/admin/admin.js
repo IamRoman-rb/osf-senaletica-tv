@@ -194,6 +194,7 @@
     const s = state.settings;
     $('fit-select').value = s.fitMode;
     $('rotation-select').value = String(s.rotation);
+    $('rotation-label').textContent = ROTATION_LABELS[s.rotation] ?? `${s.rotation}°`;
     $('set-autostart').checked = s.autoStartWithWindows;
     $('set-autoplayer').checked = s.autoOpenPlayer;
     $('set-mute').checked = s.muteVideos;
@@ -233,6 +234,11 @@
     if (name) saveSettings({ branch: name });
   });
   $('rotation-select').addEventListener('change', (e) => saveSettings({ rotation: Number(e.target.value) }));
+
+  const ROTATION_LABELS = { 0: '0° · Horizontal', 90: '90° · Vertical', 180: '180° · Invertida', 270: '270° · Vertical' };
+  const rotateBy = (delta) => saveSettings({ rotation: ((state.settings?.rotation ?? 0) + delta + 360) % 360 });
+  $('rotate-left').addEventListener('click', () => rotateBy(-90));
+  $('rotate-right').addEventListener('click', () => rotateBy(90));
   $('fit-select').addEventListener('change', (e) => saveSettings({ fitMode: e.target.value }));
   $('set-autostart').addEventListener('change', (e) => saveSettings({ autoStartWithWindows: e.target.checked }));
   $('set-autoplayer').addEventListener('change', (e) => saveSettings({ autoOpenPlayer: e.target.checked }));
