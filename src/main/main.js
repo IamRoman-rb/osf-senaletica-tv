@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('node:path');
-const { app, BrowserWindow, screen, safeStorage } = require('electron');
+const { app, BrowserWindow, screen, safeStorage, powerMonitor } = require('electron');
 const { config } = require('./config');
 const { Logger } = require('./core/logger');
 const { JsonFileStore } = require('./core/json-file-store');
@@ -110,6 +110,11 @@ async function bootstrap() {
     if (reason === 'manual') player.close();
   });
   content.on('unauthorized', (message) => auth.expire(message));
+
+  // Al volver de suspensión o desbloquear la PC, sincroniza sin esperar al próximo ciclo.
+  const syncIfLoggedIn = () => { if (auth.token) content.syncNow(); };
+  powerMonitor.on('resume', syncIfLoggedIn);
+  powerMonitor.on('unlock-screen', syncIfLoggedIn);
 
   const applyLoginItem = (s) => {
     if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: s.autoStartWithWindows });

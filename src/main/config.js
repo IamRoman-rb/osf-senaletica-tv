@@ -42,7 +42,8 @@ const config = Object.freeze({
     }),
   }),
   sync: Object.freeze({
-    intervalMs: Number(readEnv('OSF_SYNC_INTERVAL_MS', 5 * MINUTE)),
+    /** Cada cuánto se consulta el servidor. Sólo se descargan piezas nuevas o cambiadas. */
+    intervalMs: Number(readEnv('OSF_SYNC_INTERVAL_MS', 1 * MINUTE)),
     retryDelayMs: Number(readEnv('OSF_SYNC_RETRY_MS', 30 * 1000)),
     downloadConcurrency: 2,
   }),

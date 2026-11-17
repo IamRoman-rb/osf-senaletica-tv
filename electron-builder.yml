@@ -11,6 +11,7 @@ files:
   - src/**/*
   - assets/**/*
   - package.json
+  - build/icon.ico
   - "!**/*.test.js"
 
 asar: true
@@ -20,7 +21,7 @@ win:
     - target: nsis
       arch: [x64]
   artifactName: OSF-Senaletica-Setup-${version}.${ext}
-  # icon: build/icon.ico   # agregar el ícono oficial (256x256) cuando esté disponible
+  icon: build/icon.ico           # logo de OSF (16–256 px)
 
 nsis:
   oneClick: false
@@ -29,6 +30,9 @@ nsis:
   createDesktopShortcut: always
   createStartMenuShortcut: true
   shortcutName: OSF Señalética
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
   uninstallDisplayName: OSF Señalética
   runAfterFinish: true
   deleteAppDataOnUninstall: false

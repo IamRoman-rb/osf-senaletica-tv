@@ -71,13 +71,10 @@ p { margin: 0; }
 .login__footer { display: flex; justify-content: space-between; font-size: 12px; }
 
 .brand { display: flex; align-items: center; gap: 12px; }
-.brand__logo {
-  width: 44px; height: 44px; border-radius: var(--radius); background: #fff; color: var(--navy);
-  display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-weight: 800;
-}
+.brand__logo { width: 48px; height: 48px; object-fit: contain; flex-shrink: 0; }
 .brand__text { display: flex; flex-direction: column; }
 .brand__text span { color: var(--on-navy-muted); font-size: 13px; }
-.brand--small .brand__logo { width: 36px; height: 36px; font-size: 13px; }
+.brand--small .brand__logo { width: 38px; height: 38px; }
 
 .update-box { background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
 .update-box__row { display: flex; justify-content: space-between; gap: 8px; }
